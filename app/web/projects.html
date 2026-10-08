@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<script>try{var t=localStorage.getItem('pt-theme');if(t)document.documentElement.dataset.theme=t}catch(e){}</script>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>项目库 · Pulse 虚拟团队</title>
+<link rel="stylesheet" href="/web/panels.css">
+</head>
+<body data-panel="projects">
+<div class="bg"></div>
+
+<header class="topbar">
+  <span class="brand"><span class="logo"><svg class="ic" viewBox="0 0 24 24"><path d="M12 2.6l8 4.5v9.8l-8 4.5-8-4.5V7.1z"/><circle cx="12" cy="12" r="2.4"/></svg></span>Pulse 虚拟团队</span>
+  <span class="sep"></span>
+  <a class="back" href="/"><svg class="ic" viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg>返回协作台</a>
+  <span class="back" style="cursor:default;color:var(--tx);border-color:var(--brand)"><svg class="ic" viewBox="0 0 24 24"><path d="M3 7.4A2 2 0 0 1 5 5.4h3.6l2 2.2H19a2 2 0 0 1 2 2v7.4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>项目库</span>
+  <a class="back" href="/memory"><svg class="ic" viewBox="0 0 24 24"><rect x="6.5" y="6.5" width="11" height="11" rx="2.2"/><path d="M9.5 3v3.5M14.5 3v3.5M9.5 17.5V21M14.5 17.5V21M3 9.5h3.5M3 14.5h3.5M17.5 9.5H21M17.5 14.5H21"/></svg>团队记忆</a>
+  <div class="right">
+    <button class="tbtn" id="themebtn" title="切换深浅主题" aria-label="切换主题"></button>
+  </div>
+</header>
+
+<main class="wrap">
+  <div class="phead2">
+    <h1><span class="logo"><svg class="ic" viewBox="0 0 24 24" style="width:19px;height:19px"><path d="M3 7.4A2 2 0 0 1 5 5.4h3.6l2 2.2H19a2 2 0 0 1 2 2v7.4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg></span>项目库</h1>
+    <span class="pcount" id="count"></span>
+  </div>
+  <div class="psub">每一次交付都是一张卡片 · 可打开 / 回放 / 复验证书</div>
+  <div class="hinfo">
+    <span class="ic"><svg class="ic" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 11.2v5.3M12 7.8h.01"/></svg></span>
+    <div>
+      <div class="t1">每张卡片对应一次完整交付</div>
+      <div class="t2">分数来自引擎实测（设计审计 / 质量体检 / 需求覆盖）；「看证书」可重新复验 SHA-256 指纹；卡片下方是这次交付的真实 git 提交史（作者是角色）。点预览图直接打开原型。</div>
+    </div>
+  </div>
+  <div class="growth" id="growth"></div>
+  <div class="pgrid" id="grid"></div>
+</main>
+
+<script src="/web/panels.js"></script>
+</body>
+</html>

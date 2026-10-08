@@ -1,0 +1,13 @@
+{
+  "name": "pulse-virtual-team",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Pulse 虚拟团队 · 多 Agent 协同交付（浏览器版）",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "openai": "^6.34.0"
+  }
+}

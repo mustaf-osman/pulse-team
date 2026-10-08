@@ -1,0 +1,8 @@
+[
+  { "id": "pm",   "name": "项目经理", "avatar": "总", "color": "#86909C", "temp": 0.5 },
+  { "id": "req",  "name": "需求分析师", "avatar": "需", "color": "#4080E8", "temp": 0.6 },
+  { "id": "des",  "name": "方案设计", "avatar": "设", "color": "#9B6CD9", "temp": 0.6, "provider": "deepseek", "model": "deepseek-chat" },
+  { "id": "dev",  "name": "编码开发", "avatar": "码", "color": "#00B8C4", "temp": 0.4, "provider": "deepseek", "model": "deepseek-chat" },
+  { "id": "qa",   "name": "测试工程", "avatar": "测", "color": "#F28C38", "temp": 0.4 },
+  { "id": "doc",  "name": "文档工程", "avatar": "档", "color": "#86909C", "temp": 0.6 }
+]

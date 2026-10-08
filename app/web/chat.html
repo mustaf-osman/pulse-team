@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<!-- 主题预加载：首屏渲染前应用已保存主题，避免闪白（与协作台共用 localStorage 键 pt-theme，取值 dark/mid/light） -->
+<script>try{var t=localStorage.getItem('pt-theme');if(t==='dark'||t==='mid'||t==='light')document.documentElement.dataset.theme=t}catch(e){}</script>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="color-scheme" content="dark light">
+<title>Pulse 虚拟团队 · 对话台</title>
+<style>
+/* ============================================================
+   设计令牌（DesignToken）
+   角色色固定（禁改）；状态色独立；品牌主色 #00B8C4
+   字号层级：页面标题 18/600｜模块小标题 16/600｜正文 14/400｜辅助 12/400｜标签 11/400
+   圆角：大卡片/弹窗 8px；按钮/标签/下拉 6px
+   ============================================================ */
+/* 深色主题（默认，:root 与 [data-theme="dark"] 保持一致） */
+:root,html[data-theme="dark"]{
+  --bg:#0F1117;--grid:#272A33;--panel:#151922;--card:#1D2129;--cardbd:#333842;--line:#272A33;--line2:#393D49;
+  --tx:#F2F3F5;--mut:#C9CDD4;
+  --brand:#00B8C4;--brand-tx:#00B8C4;--brand-soft:rgba(0,184,196,.12);
+  /* 角色识别色（固定，双主题一致） */
+  --rc-pm:#86909C;--rc-req:#4080E8;--rc-des:#9B6CD9;--rc-dev:#00B8C4;--rc-qa:#F28C38;--rc-doc:#86909C;
+  --rcb-pm:#86909C66;--rcb-req:#4080E866;--rcb-des:#9B6CD966;--rcb-dev:#00B8C466;--rcb-qa:#F28C3866;--rcb-doc:#86909C66;
+  /* 角色文字色（按主题微调明度，保证对比度 ≥4.5:1） */
+  --rt-pm:#AAB4C0;--rt-req:#74A6F2;--rt-des:#B08CE8;--rt-dev:#00B8C4;--rt-qa:#F28C38;--rt-doc:#9AA6B2;
+  /* 状态色（独立语义，禁止与角色色混用） */
+  --st-done:#36C976;--st-work:#00B8C4;--st-idle:#94C9FF;--st-err:#FF7D00;
+  --st-done-tx:#36C976;--st-work-tx:#00B8C4;--st-idle-tx:#94C9FF;--st-err-tx:#FF7D00;
+  /* 告警 */
+  --warn-tx:#FF7D00;--warn-bg:rgba(255,125,0,.10);
+  /* 交互浮层 / 输入 */
+  --sel-bg:rgba(0,184,196,.12);--hover:rgba(0,184,196,.12);
+  --me-bg:rgba(0,184,196,.14);--me-bd:rgba(0,184,196,.35);--me-tx:#9FE8DB;--ph:#8C96A8;
+  --mono:ui-monospace,"Cascadia Mono",Consolas,monospace;
+}
+/* 石墨灰（与协作台同款中间档） */
+html[data-theme="mid"]{
+  --bg:#12161E;--grid:#2A2F3A;--panel:#181D27;--card:#1D2129;--cardbd:#333842;--line:#2A2F3A;--line2:#3A4150;
+  --tx:#F2F3F5;--mut:#C9CDD4;
+  --brand:#00B8C4;--brand-tx:#00B8C4;--brand-soft:rgba(0,184,196,.12);
+  --rc-pm:#86909C;--rc-req:#4080E8;--rc-des:#9B6CD9;--rc-dev:#00B8C4;--rc-qa:#F28C38;--rc-doc:#86909C;
+  --rcb-pm:#86909C66;--rcb-req:#4080E866;--rcb-des:#9B6CD966;--rcb-dev:#00B8C466;--rcb-qa:#F28C3866;--rcb-doc:#86909C66;
+  --rt-pm:#AAB4C0;--rt-req:#74A6F2;--rt-des:#B08CE8;--rt-dev:#00B8C4;--rt-qa:#F28C38;--rt-doc:#9AA6B2;
+  --st-done:#36C976;--st-work:#00B8C4;--st-idle:#94C9FF;--st-err:#FF7D00;
+  --st-done-tx:#36C976;--st-work-tx:#00B8C4;--st-idle-tx:#94C9FF;--st-err-tx:#FF7D00;
+  --warn-tx:#FF7D00;--warn-bg:rgba(255,125,0,.10);
+  --sel-bg:rgba(0,184,196,.12);--hover:rgba(0,184,196,.12);
+  --me-bg:rgba(0,184,196,.14);--me-bd:rgba(0,184,196,.35);--me-tx:#9FE8DB;--ph:#8C96A8;
+}
+/* 浅色主题：角色色文字加深一档、告警黄加深，全部保证 WCAG ≥4.5:1 */
+html[data-theme="light"]{
+  --bg:#F7F9FC;--grid:#E6E9F0;--panel:#FFFFFF;--card:#FFFFFF;--cardbd:#E5E6EB;--line:#E5E6EB;--line2:#DCDFE6;
+  --tx:#1D2129;--mut:#4E5969;
+  --brand:#00B8C4;--brand-tx:#00707A;--brand-soft:rgba(0,184,196,.10);
+  --rc-pm:#86909C;--rc-req:#4080E8;--rc-des:#9B6CD9;--rc-dev:#00B8C4;--rc-qa:#F28C38;--rc-doc:#86909C;
+  --rcb-pm:#86909C;--rcb-req:#4080E8;--rcb-des:#9B6CD9;--rcb-dev:#00B8C4;--rcb-qa:#F28C38;--rcb-doc:#86909C;
+  --rt-pm:#566070;--rt-req:#2A5FBF;--rt-des:#6E41C0;--rt-dev:#00757E;--rt-qa:#9E560F;--rt-doc:#566069;
+  --st-done:#36C976;--st-work:#00B8C4;--st-idle:#94C9FF;--st-err:#FF7D00;
+  --st-done-tx:#15703F;--st-work-tx:#00757E;--st-idle-tx:#2660BE;--st-err-tx:#95560A;
+  --warn-tx:#8F5200;--warn-bg:rgba(255,125,0,.10);
+  --sel-bg:rgba(0,184,196,.08);--hover:rgba(0,184,196,.08);
+  --me-bg:rgba(0,184,196,.12);--me-bd:rgba(0,184,196,.40);--me-tx:#006E77;--ph:#5E6B7C;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{height:100%}
+body{background:var(--bg);color:var(--tx);font:14px/1.6 "Segoe UI","Microsoft YaHei UI","Microsoft YaHei",system-ui,sans-serif;display:grid;grid-template-rows:50px 1fr;height:100vh;overflow:hidden}
+.bg{position:fixed;inset:0;z-index:-1;background:
+ radial-gradient(1100px 640px at 74% -14%,rgba(0,184,196,.05),transparent 62%),
+ radial-gradient(900px 620px at 4% 114%,rgba(64,128,232,.04),transparent 62%),
+ linear-gradient(var(--grid) 1px,transparent 1px) 0 0/46px 46px,
+ linear-gradient(90deg,var(--grid) 1px,transparent 1px) 0 0/46px 46px;opacity:.6}
+html[data-theme="light"] .bg{opacity:.9}
+/* ===== 顶栏 ===== */
+.topbar{display:flex;align-items:center;gap:14px;padding:0 18px;border-bottom:1px solid var(--line);background:var(--panel)}
+.brand{display:flex;align-items:baseline;gap:9px;font-size:18px;font-weight:600;color:var(--tx)}
+.brand .logo{color:var(--brand-tx);font-size:17px;text-shadow:0 0 12px rgba(0,184,196,.45)}
+.brand .sub{color:var(--mut);font-size:12px;font-weight:400}
+/* LIVE 标签：品牌主色（不再用「任务完成」绿） */
+.live{display:flex;align-items:center;gap:6px;font-size:11px;font-weight:400;letter-spacing:1.5px;color:var(--brand-tx);background:var(--brand-soft);border-radius:6px;padding:3px 10px}
+.live i{width:7px;height:7px;border-radius:50%;background:var(--brand-tx);animation:ping 1.8s ease-out infinite}
+@keyframes ping{0%{box-shadow:0 0 0 0 rgba(0,184,196,.5)}100%{box-shadow:0 0 0 9px rgba(0,184,196,0)}}
+/* 主题切换按钮（点击循环：深色 → 石墨 → 浅色） */
+.themebtn{border:1px solid var(--line2);background:transparent;color:var(--mut);border-radius:6px;padding:4px 12px;font:inherit;font-size:12px;cursor:pointer;transition:.2s}
+.themebtn:hover{border-color:var(--brand);color:var(--brand-tx);background:var(--hover)}
+.topmeta{margin-left:auto;display:flex;align-items:center;gap:14px}
+.topmeta .tm2{font-size:12px;color:var(--mut)}
+.topmeta .tm2 b{color:var(--tx);font-family:var(--mono)}
+.backlink{font-size:12px;color:var(--mut);border:1px solid var(--line2);border-radius:6px;padding:4px 14px;text-decoration:none;transition:.2s}
+.backlink:hover{border-color:var(--brand);color:var(--brand-tx);background:var(--hover)}
+/* ===== 布局 ===== */
+.main{display:grid;grid-template-columns:264px 1fr;min-height:0}
+/* ===== 左侧成员 ===== */
+.side{border-right:1px solid var(--line);background:var(--panel);padding:16px 12px;overflow-y:auto;display:flex;flex-direction:column;gap:4px}
+.ph{font-size:16px;font-weight:600;color:var(--tx);margin:2px 8px 12px}
+.agentbtn{display:flex;align-items:center;gap:11px;width:100%;padding:10px 11px;border-radius:8px;border:1px solid transparent;background:transparent;color:var(--tx);cursor:pointer;font:inherit;text-align:left;transition:background .2s,border-color .2s,transform .15s}
+.agentbtn:hover{background:var(--hover);transform:translateX(2px)}
+/* 选中高亮：品牌色边框 + 品牌色背景浮层 */
+.agentbtn.sel{border-color:var(--brand);background:var(--sel-bg);box-shadow:0 0 0 1px rgba(0,184,196,.20),0 4px 16px rgba(0,184,196,.10)}
+.avwrap{position:relative;width:38px;height:38px;flex:0 0 auto}
+.avwrap .ring{position:absolute;inset:-4px;border-radius:50%;border:1px dashed transparent;transition:border-color .3s}
+.agentbtn.busy .ring{border-color:var(--rc);animation:spin 3.4s linear infinite;box-shadow:0 0 12px -2px var(--rc)}
+@keyframes spin{to{transform:rotate(360deg)}}
+.av{position:absolute;inset:0;border-radius:50%;display:grid;place-items:center;font-size:14px;font-weight:600;color:var(--rc);border:1px solid var(--rcb);background:radial-gradient(60px 36px at 32% 22%,rgba(255,255,255,.06),transparent 62%),#0B111C}
+.meta2{flex:1;min-width:0}
+.nm2{font-size:16px;font-weight:600;line-height:1.3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mdlm{color:var(--mut);font-size:11px;font-family:var(--mono)}
+.st2{font-size:12px;font-weight:400;color:var(--st-idle-tx);margin-top:4px;transition:color .3s;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.agentbtn.busy .st2{color:var(--st-work-tx)}
+.agentbtn.done .st2{color:var(--st-done-tx)}
+.cnt{font-family:var(--mono);font-size:11px;color:var(--brand-tx);background:var(--brand-soft);border-radius:999px;padding:1px 8px;opacity:0;transition:.3s}
+.cnt.on{opacity:1}
+/* ===== 聊天区 ===== */
+.chatwrap{display:flex;flex-direction:column;min-height:0}
+.stream{flex:1;overflow-y:auto;padding:22px 34px 12px;scroll-behavior:smooth}
+/* 任务起止分割线：弱化（1px 淡线 + 11px 小字），不抢正文焦点 */
+.sys{display:flex;align-items:center;gap:12px;margin:14px 0;font-size:11px;font-weight:400;color:var(--mut);letter-spacing:.3px;min-width:0;overflow-wrap:anywhere;word-break:break-word}
+.sys::before,.sys::after{content:"";height:1px;flex:1;background:var(--line)}
+/* 告警行：左侧告警色竖条 + 告警黄文字，与普通消息、分割线明确区分 */
+.sys.warn{justify-content:flex-start;white-space:normal;color:var(--warn-tx);background:var(--warn-bg);border-left:3px solid var(--warn-tx);border-radius:0 6px 6px 0;padding:6px 10px;letter-spacing:0}
+.sys.warn::before,.sys.warn::after{display:none}
+/* 告警三角图标：固定 font-size 与行高，全站统一 */
+.wic{font-size:13px;line-height:1;width:14px;flex:0 0 auto;display:inline-flex;justify-content:center;align-items:center}
+/* 流水线消息：12px 小字 + 上下 8px 内边距 + 1px 分隔线 */
+.sysmsg{display:block;margin:0;padding:8px 2px;font-size:12px;color:var(--tx);line-height:1.65;white-space:normal;word-break:break-word;border-bottom:1px solid var(--line);animation:rise .25s both}
+.sysmsg b{font-weight:600;margin-right:2px}
+.sysmsg .t{color:var(--tx)}
+.sysmsg.warn{color:var(--warn-tx);background:var(--warn-bg);border-left:3px solid var(--warn-tx);border-radius:0 6px 6px 0;padding-left:10px}
+.sysmsg.warn .t{color:var(--warn-tx)}
+/* 聊天气泡：上下 8px 内边距 + 1px 分隔线，边界清晰 */
+.bub{display:flex;gap:12px;width:100%;margin:0;padding:8px 0;border-bottom:1px solid var(--line);animation:rise .3s cubic-bezier(.22,.8,.3,1) both}
+@keyframes rise{from{opacity:0;transform:translateY(9px)}to{opacity:1;transform:none}}
+.bub .av{position:static;width:34px;height:34px;flex:0 0 auto;margin-top:3px;font-size:13px}
+.bub .body{max-width:76%;background:var(--card);border:1px solid var(--cardbd);border-radius:8px 8px 8px 3px;padding:10px 15px;font-size:14px;color:var(--tx);line-height:1.7;word-break:break-word;white-space:pre-wrap;box-shadow:0 8px 22px rgba(0,0,0,.20)}
+.bub .who{display:flex;justify-content:space-between;gap:24px;font-size:11px;color:var(--mut);margin-bottom:4px}
+.bub .who b{color:var(--rc2);font-weight:600}
+.bub.me{justify-content:flex-end}
+.bub.me .body{max-width:70%;background:var(--me-bg);border-color:var(--me-bd);border-radius:8px 8px 3px 8px;box-shadow:none}
+.bub.me .who{justify-content:flex-end}
+.bub.me .who b{color:var(--me-tx)}
+/* 最后一条消息不画分隔线 */
+.stream>.bub:last-child,.stream>.sysmsg:last-child{border-bottom-color:transparent}
+.typing2{display:flex;align-items:center;gap:9px;margin:12px 0 12px 46px;font-size:12px;color:var(--mut)}
+.typing2 b{color:var(--rc2);font-weight:600}
+.dots{display:inline-flex;gap:3px}
+.dots i{width:4px;height:4px;border-radius:50%;background:var(--mut);animation:bounce 1.2s infinite}
+.dots i:nth-child(2){animation-delay:.15s}
+.dots i:nth-child(3){animation-delay:.3s}
+@keyframes bounce{0%,80%,100%{transform:translateY(0);opacity:.4}40%{transform:translateY(-4px);opacity:1}}
+/* 欢迎卡（大卡片 8px 圆角） */
+.welcome{margin:9vh auto 0;width:min(520px,80%);text-align:center;padding:34px 30px;border-radius:8px;border:1px solid var(--cardbd);background:var(--card);box-shadow:0 20px 50px rgba(0,0,0,.30)}
+.welcome .gl{font-size:30px;color:var(--brand-tx);text-shadow:0 0 22px rgba(0,184,196,.45)}
+.welcome h2{margin-top:12px;font-size:18px;font-weight:600}
+.welcome p{margin-top:8px;font-size:12px;color:var(--mut);line-height:1.8}
+.welcome .row2{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:18px}
+/* ===== 输入区 ===== */
+.compose{border-top:1px solid var(--line);padding:12px 22px 14px;background:var(--panel)}
+.suggests{display:flex;gap:7px;margin-bottom:9px;flex-wrap:wrap;overflow:hidden;transition:max-height .3s,opacity .3s;max-height:40px;opacity:1}
+.suggests.hide{max-height:0;opacity:0;margin-bottom:0}
+/* 快捷操作按钮：统一高度 28px、圆角 6px、hover 背景浮层 */
+.suggests button,.welcome .row2 button{border:1px solid var(--line2);background:transparent;color:var(--mut);border-radius:6px;height:28px;padding:0 12px;font-size:12px;line-height:1;cursor:pointer;transition:background .2s,border-color .2s,color .2s;white-space:nowrap}
+.suggests button:hover,.welcome .row2 button:hover{border-color:var(--brand);color:var(--brand-tx);background:var(--hover)}
+/* 角色选择下拉框 / 输入框 / 发送按钮：统一 40px 高、6px 圆角、垂直对齐 */
+.inrow{display:flex;gap:10px;align-items:center}
+.tgt{position:relative;display:flex;align-items:center;gap:8px;height:40px;padding:0 30px 0 8px;border-radius:6px;border:1px solid var(--cardbd);background:var(--card);flex:0 0 auto;transition:border-color .2s}
+.tgt i{width:22px;height:22px;border-radius:50%;display:grid;place-items:center;font-style:normal;font-size:11px;font-weight:600;color:var(--rc);border:1px solid var(--rcb);background:#0B111C}
+.tgt select{appearance:none;-webkit-appearance:none;border:none;background:transparent;color:var(--tx);font:inherit;font-size:14px;cursor:pointer;outline:none;height:100%;padding:0}
+.tgt::after{content:"▾";position:absolute;right:10px;top:50%;transform:translateY(-50%);font-size:11px;color:var(--mut);pointer-events:none}
+.inrow input{flex:1;height:40px;background:var(--card);border:1px solid var(--line2);border-radius:6px;color:var(--tx);padding:0 14px;font:inherit;font-size:14px;outline:none;transition:border-color .2s,box-shadow .2s}
+.inrow input:focus{border-color:var(--brand);box-shadow:0 0 0 3px rgba(0,184,196,.15)}
+.inrow input::placeholder{color:var(--ph)}
+.inrow button{border:none;border-radius:6px;background:var(--brand);color:#08120f;font-weight:600;font-size:14px;height:40px;padding:0 26px;cursor:pointer;transition:.2s;box-shadow:0 0 16px rgba(0,184,196,.22)}
+.inrow button:hover{filter:brightness(1.08);transform:translateY(-1px)}
+/* ===== 动效层（统一节奏 · 尊重系统减弱动效）===== */
+@keyframes cPop{0%{opacity:0;transform:translateY(10px) scale(.97)}62%{opacity:1;transform:none}100%{transform:none}}
+@keyframes cRing{0%{box-shadow:0 0 0 0 color-mix(in srgb,var(--brand) 46%,transparent)}100%{box-shadow:0 0 0 10px transparent}}
+@keyframes cSheen{0%{transform:translateX(-140%)}100%{transform:translateX(340%)}}
+.agentbtn{transition:background .18s,transform .18s,box-shadow .18s,color .18s}
+.agentbtn:hover{transform:translateX(2px)}
+.agentbtn.on{animation:cRing 2.2s ease-out infinite}
+.suggests button:active,.inrow button:active,.backlink:active,.themebtn:active{transform:translateY(1px) scale(.985)}
+.inrow button{position:relative;overflow:hidden;transition:filter .18s,transform .14s,box-shadow .18s}
+.inrow button::after{content:"";position:absolute;top:0;bottom:0;left:0;width:34%;background:linear-gradient(90deg,transparent,rgba(255,255,255,.34),transparent);transform:translateX(-140%);pointer-events:none}
+.inrow button:hover::after{animation:cSheen .8s ease}
+.bub .body{transition:box-shadow .2s,transform .18s,border-color .18s}
+.bub:hover .body{transform:translateY(-1px);box-shadow:0 12px 26px rgba(0,0,0,.26)}
+.live i{animation:cRing 2s ease-out infinite}
+.side,.topbar,.compose{animation:cPop .34s cubic-bezier(.22,1.1,.36,1) both}
+.stream>.sysmsg{animation:cPop .3s ease both}
+/* 保险开关：2.5 秒后清掉所有入场动画（标签页冻结时动画可能永远跑不完） */
+body.pt-shot .topbar,body.pt-shot .side,body.pt-shot .chatwrap,body.pt-shot .compose,
+body.pt-shot .agentbtn,body.pt-shot .stream>.bub,body.pt-shot .stream>.sysmsg,body.pt-shot .welcome{animation:none!important}
+@media (prefers-reduced-motion: reduce){*{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}}
+.inrow button:disabled{opacity:.45;cursor:default;transform:none}
+/* ===== 长文本安全网（v10）：长中文/长链接/长串一律不得撑破布局 ===== */
+html,body{overflow-x:hidden;max-width:100%}
+.main,.chatwrap,.stream,.side,.topbar,.compose,.bub,.bub .body,.sys,.sysmsg,.welcome,.agentbtn,.nm2,.st2{min-width:0;max-width:100%}
+.bub .body,.sysmsg,.sys,.who,.nm2,.st2{overflow-wrap:anywhere;word-break:break-word}
+.stream,.side{overflow-x:hidden}
+/* ===== v9 强动效层 ===== */
+@keyframes qDown{from{opacity:0;transform:translateY(-16px)}to{opacity:1;transform:none}}
+@keyframes qLeft{from{opacity:0;transform:translateX(-26px)}to{opacity:1;transform:none}}
+@keyframes qUp{from{opacity:0;transform:translateY(22px)}to{opacity:1;transform:none}}
+@keyframes qRight{from{opacity:0;transform:translateX(26px)}to{opacity:1;transform:none}}
+@keyframes qAurora{0%{transform:translate3d(-4%,-3%,0) scale(1.06)}50%{transform:translate3d(4%,3%,0) scale(1.14)}100%{transform:translate3d(-4%,-3%,0) scale(1.06)}}
+@keyframes qRipple{from{transform:scale(0);opacity:.5}to{transform:scale(2.8);opacity:0}}
+@keyframes qBlurIn{from{opacity:0;transform:translateY(10px);filter:blur(6px)}to{opacity:1;transform:none;filter:none}}
+@keyframes qFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
+.topbar{animation:qDown .5s cubic-bezier(.22,.9,.3,1) both}
+.side{animation:qLeft .55s .06s cubic-bezier(.22,.9,.3,1) both}
+.chatwrap{animation:qUp .6s .12s cubic-bezier(.22,.9,.3,1) both}
+.compose{animation:qUp .55s .2s cubic-bezier(.22,.9,.3,1) both}
+/* 注意：全屏 .bg 不做 transform 动画（合成层在部分显卡上会露出底色） */
+.stream>.bub,.stream>.sysmsg{animation:qBlurIn .4s cubic-bezier(.22,.9,.3,1) both}
+.stream>.bub:nth-child(2){animation-delay:.05s}
+.stream>.bub:nth-child(3){animation-delay:.1s}
+.stream>.bub:nth-child(4){animation-delay:.15s}
+.stream>.bub:nth-child(5){animation-delay:.2s}
+.stream>.bub:nth-child(6){animation-delay:.25s}
+.stream>.bub:nth-child(7){animation-delay:.3s}
+.agentbtn{animation:qRight .5s cubic-bezier(.22,.9,.3,1) both}
+.agentbtn:nth-child(2){animation-delay:.05s}
+.agentbtn:nth-child(3){animation-delay:.1s}
+.agentbtn:nth-child(4){animation-delay:.15s}
+.agentbtn:nth-child(5){animation-delay:.2s}
+.agentbtn:nth-child(6){animation-delay:.25s}
+.agentbtn:nth-child(7){animation-delay:.3s}
+.agentbtn.on{animation:cRing 2.2s ease-out infinite,qFloat 3.4s ease-in-out infinite}
+button{position:relative;overflow:hidden}
+.rp{position:absolute;border-radius:50%;transform:scale(0);background:radial-gradient(circle,rgba(0,184,196,.75),transparent 70%);animation:qRipple .62s ease-out forwards;pointer-events:none}
+.bg::after{content:"";position:absolute;inset:0;background:radial-gradient(520px circle at var(--mx,50%) var(--my,42%),rgba(0,184,196,.13),transparent 62%);pointer-events:none}
+html[data-theme="light"] .bg::after{background:radial-gradient(520px circle at var(--mx,50%) var(--my,42%),rgba(0,184,196,.10),transparent 62%)}
+@media (prefers-reduced-motion: reduce){*{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}}
+/* 浅色主题：阴影减弱，避免脏感 */
+html[data-theme="light"] .bub .body{box-shadow:0 6px 16px rgba(30,45,70,.07)}
+html[data-theme="light"] .welcome{box-shadow:0 16px 40px rgba(30,45,70,.10)}
+html[data-theme="light"] .brand .logo,html[data-theme="light"] .welcome .gl{text-shadow:none}
+html[data-theme="light"] ::-webkit-scrollbar-thumb{background:rgba(30,45,70,.20)}
+::-webkit-scrollbar{width:6px;height:6px}
+::-webkit-scrollbar-thumb{background:rgba(148,178,255,.16);border-radius:3px}
+body.rebooting *{animation:none!important;transition:none!important}
+</style>
+</head>
+<body>
+<div class="bg"></div>
+<header class="topbar">
+  <div class="brand"><span class="logo">⬡</span>Pulse 虚拟团队<span class="sub">对话台 · 和每个角色直接聊</span></div>
+  <span class="live"><i></i>LIVE</span>
+  <button class="themebtn" id="themebtn" title="切换主题：深色 → 石墨 → 浅色（记忆选择）">◐ 主题</button>
+  <div class="topmeta">
+    <span class="tm2">在线 <b id="t-on">6</b> / 工作中 <b id="t-busy">0</b></span>
+    <a class="backlink" href="/">← 回协作台</a>
+  </div>
+</header>
+<main class="main">
+  <aside class="side">
+    <div class="ph">成员 · 点击选择对话对象</div>
+    <div id="agents"></div>
+  </aside>
+  <section class="chatwrap">
+    <div class="stream" id="stream"></div>
+    <div class="compose">
+      <div class="suggests hide" id="suggests"></div>
+      <div class="inrow">
+        <div class="tgt" id="tgt"><i>总</i><select id="tsel" aria-label="选择对话角色"></select></div>
+        <input id="cinput" placeholder="发送消息给选中角色" autocomplete="off">
+        <button id="csend">发送</button>
+      </div>
+    </div>
+  </section>
+</main>
+<script>
+window.__errs=[];addEventListener('error',e=>window.__errs.push(String(e&&e.message||e)));addEventListener('unhandledrejection',e=>window.__errs.push('rej:'+String(e&&e.reason)));
+const $=s=>document.querySelector(s)
+/* ===== 主题系统：深色/石墨/浅色一键循环，localStorage 记忆（与协作台共用 pt-theme） ===== */
+const THEMES=['dark','mid','light']
+const TNAME={dark:'深色',mid:'石墨',light:'浅色'}
+function applyTheme(t){document.documentElement.dataset.theme=t;try{localStorage.setItem('pt-theme',t)}catch(e){}}
+$('#themebtn').onclick=()=>{
+  const cur=document.documentElement.dataset.theme||'dark'
+  const next=THEMES[(THEMES.indexOf(cur)+1)%THEMES.length]
+  applyTheme(next)
+  $('#themebtn').title='当前：'+ (TNAME[next]||next) +'（点击循环切换）'
+}
+/* ===== 角色数据：颜色一律走 CSS 令牌（--rc/--rt/--rcb-<id>），随主题自动映射 ===== */
+const AGENTS=[['pm','项目经理','总','MiniMax'],['req','需求分析师','需','MiniMax'],['des','方案设计','设','DeepSeek'],['dev','编码开发','码','DeepSeek'],['qa','测试工程','测','MiniMax'],['doc','文档工程','档','MiniMax']]
+const NAME={},AV={},MODEL={}
+for(const [id,nm,av,md] of AGENTS){NAME[id]=nm;AV[id]=av;MODEL[id]=md}
+const RC=id=>'var(--rc-'+id+')',RT=id=>'var(--rt-'+id+')',RB=id=>'var(--rcb-'+id+')'
+const ALIAS={项目经理:'pm',总:'pm',pm:'pm',需求分析师:'req',需求:'req',需:'req',req:'req',方案设计:'des',设计:'des',设:'des',des:'des',编码开发:'dev',编码:'dev',码:'dev',dev:'dev',测试工程:'qa',测试:'qa',测:'qa',qa:'qa',文档工程:'doc',文档:'doc',档:'doc',doc:'doc'}
+const SUGGEST={pm:['现在谁在干活？','进度到哪了？','接下来会发生什么？'],req:['需求文档写了什么？','哪些功能最重要？'],des:['页面结构是怎么设计的？','为什么这样排版？'],dev:['原型是怎么写出来的？','用了什么技术？'],qa:['这页面测过了吗？','有什么问题？','能交付吗？'],doc:['交付了哪些文件？','README 写了什么？']}
+const STTXT={idle:'待命',think:'思考中…',work:'工作中…',wait:'等待批复',done:'已完成'}
+let target='pm',appliedRun=null,lastApplied=0
+const counts={},busy={}
+for(const [id] of AGENTS){counts[id]=0;busy[id]='idle'}
+const stream=$('#stream'),cinput=$('#cinput')
+const hhmm=t=>{try{return new Date(t).toLocaleTimeString('zh-CN',{hour12:false,hour:'2-digit',minute:'2-digit'})}catch{return ''}}
+function scroll(){stream.scrollTop=stream.scrollHeight}
+function rm(id){const e=$('#'+id);if(e)e.remove()}
+/* 告警识别：⚠/❗ 开头的行统一按告警样式渲染（图标尺寸统一） */
+const WARNRE=/^\s*(⚠️|⚠|❗)\s*/
+function warnIcon(ch){const s=document.createElement('span');s.className='wic';s.textContent=ch;return s}
+function sysLine(text){
+  rm('welcome')
+  const d=document.createElement('div')
+  const m=String(text).match(WARNRE)
+  d.className='sys'+(m?' warn':'')
+  if(m){d.appendChild(warnIcon(m[1]));const t=document.createElement('span');t.textContent=String(text).slice(m[0].length);d.appendChild(t)}
+  else{d.textContent=text}
+  stream.appendChild(d);scroll()
+}
+function sysMsg(agentId,text){
+  rm('welcome')
+  const d=document.createElement('div')
+  const m=String(text||'').match(WARNRE)
+  d.className='sysmsg'+(m?' warn':'')
+  if(m)d.appendChild(warnIcon(m[1]))
+  const b=document.createElement('b');b.style.color=RT(agentId);b.textContent=(NAME[agentId]||agentId)+'：'
+  const s=document.createElement('span');s.className='t';s.textContent=m?String(text).slice(m[0].length):(text||'')
+  d.appendChild(b);d.appendChild(s);stream.appendChild(d);scroll()
+}
+function bubble(from,agentId,text,ts){
+  rm('welcome')
+  const b=document.createElement('div');b.className='bub'+(from==='user'?' me':'')
+  if(from!=='user'){
+    const av=document.createElement('div');av.className='av';av.textContent=AV[agentId]||'?'
+    av.style.setProperty('--rc',RC(agentId));av.style.setProperty('--rcb',RB(agentId))
+    b.appendChild(av)
+  }
+  const body=document.createElement('div');body.className='body'
+  if(from==='user')body.style.setProperty('--rc','var(--mut)')
+  const who=document.createElement('div');who.className='who'
+  const nm=document.createElement('b');nm.textContent=from==='user'?'我':(NAME[agentId]||agentId)
+  const tm=document.createElement('span');tm.textContent=hhmm(ts||Date.now())
+  who.appendChild(nm);who.appendChild(tm)
+  const t=document.createElement('div');t.textContent=text||''
+  body.appendChild(who);body.appendChild(t)
+  body.style.setProperty('--rc2',from==='user'?'var(--me-tx)':RT(agentId))
+  b.appendChild(body);stream.appendChild(b);scroll()
+}
+function addTyping(id){removeTyping(id);rm('welcome');const d=document.createElement('div');d.className='typing2';d.id='typing-'+id
+  d.style.setProperty('--rc2',RT(id))
+  const b=document.createElement('b');b.textContent=NAME[id]||id
+  const dots=document.createElement('span');dots.className='dots';dots.innerHTML='<i></i><i></i><i></i>'
+  const s=document.createElement('span');s.textContent='正在输入'
+  d.appendChild(b);d.appendChild(s);d.appendChild(dots)
+  stream.appendChild(d);scroll()}
+function removeTyping(id){const e=$('#typing-'+id);if(e)e.remove()}
+function setTarget(id){target=id;document.querySelectorAll('.agentbtn').forEach(b=>b.classList.toggle('sel',b.dataset.id===id))
+  const a=AGENTS.find(x=>x[0]===id)
+  const tg=$('#tgt');tg.style.setProperty('--rc',RC(id));tg.style.setProperty('--rcb',RB(id))
+  tg.querySelector('i').textContent=AV[id];tg.querySelector('select').value=id
+  refreshSuggests()}
+function refreshSuggests(){
+  const box=$('#suggests');const q=(SUGGEST[target]||[])
+  const show=q.length&&counts[target]===0
+  box.classList.toggle('hide',!show)
+  box.innerHTML=''
+  for(const s of q){const b=document.createElement('button');b.textContent=s
+    b.onclick=()=>{cinput.value='@'+NAME[target]+' '+s;cinput.focus()}
+    box.appendChild(b)}
+}
+function buildAgents(){
+  const wrap=$('#agents')
+  for(const [id,nm,av,md] of AGENTS){
+    const b=document.createElement('button');b.className='agentbtn';b.dataset.id=id;b.style.setProperty('--rc',RC(id));b.style.setProperty('--rcb',RB(id))
+    const aw=document.createElement('div');aw.className='avwrap'
+    const ring=document.createElement('div');ring.className='ring'
+    const a=document.createElement('div');a.className='av';a.textContent=av
+    aw.appendChild(ring);aw.appendChild(a)
+    const meta=document.createElement('div');meta.className='meta2'
+    const n=document.createElement('div');n.className='nm2';n.textContent=nm
+    const ms=document.createElement('span');ms.className='mdlm';ms.textContent=' · '+md;n.appendChild(ms)
+    const st=document.createElement('div');st.className='st2';st.id='st-'+id;st.textContent='待命'
+    meta.appendChild(n);meta.appendChild(st)
+    const cnt=document.createElement('div');cnt.className='cnt';cnt.id='cnt-'+id;cnt.textContent='0'
+    b.appendChild(aw);b.appendChild(meta);b.appendChild(cnt)
+    b.onclick=()=>setTarget(id)
+    wrap.appendChild(b)
+  }
+  const sel=$('#tsel')
+  for(const [id,nm] of AGENTS){const o=document.createElement('option');o.value=id;o.textContent=nm;sel.appendChild(o)}
+  sel.onchange=e=>setTarget(e.target.value)
+}
+function roleState(id,st){
+  busy[id]=st
+  const btn=document.querySelector('.agentbtn[data-id="'+id+'"]');if(!btn)return
+  btn.classList.toggle('busy',st==='think'||st==='work')
+  btn.classList.toggle('done',st==='done')
+  const el=$('#st-'+id);if(el)el.textContent=STTXT[st]||'待命'
+  const nOn=AGENTS.length, nBusy=Object.values(busy).filter(v=>v==='think'||v==='work').length
+  $('#t-on').textContent=nOn;$('#t-busy').textContent=nBusy
+}
+function bump(id){counts[id]=(counts[id]||0)+1;const el=$('#cnt-'+id);if(el){el.textContent=counts[id];el.classList.add('on')}refreshSuggests()}
+async function post(url,body){try{const r=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});return await r.json()}catch(e){return{error:String(e&&e.message||e)}}}
+async function send(){
+  const raw=cinput.value.trim();if(!raw)return
+  let agent=target,body=raw
+  const m=raw.match(/^\s*@([^\s，,：:]+)[\s，,：:]*([\s\S]*)$/)
+  if(m){
+    agent=ALIAS[m[1]]||ALIAS[m[1].toLowerCase()]||null
+    if(!agent){sysLine('⚠ 没有这个角色。可用：@项目经理 @需求分析师 @方案设计 @编码开发 @测试工程 @文档工程');return}
+    body=(m[2]||'').trim()
+    if(!body){sysLine('⚠ 想说什么？写在 @'+m[1]+' 后面');return}
+  }
+  cinput.value=''
+  setTarget(agent)
+  const r=await post('/api/chat',{agent,text:body})
+  if(r&&r.error){sysLine('⚠ '+r.error);cinput.value=raw}
+}
+$('#csend').onclick=send
+cinput.addEventListener('keydown',e=>{if(e.key==='Enter')send()})
+function applyEv(ev){
+  if(ev.type==='chat'){
+    if(ev.from==='user'){removeTyping(ev.agent);bubble('user',ev.agent,ev.text,ev.ts);bump(ev.agent);addTyping(ev.agent)}
+    else{removeTyping(ev.agent);bubble('agent',ev.agent,ev.text,ev.ts);bump(ev.agent)}
+  }else if(ev.type==='msg'){sysMsg(ev.agent,ev.text||'')}
+  else if(ev.type==='run_start'){sysLine('—— 新任务开工：'+(ev.requirement||'')+' ——')}
+  else if(ev.type==='gate'){sysLine('◈ 产出就绪，等待人工审批（回协作台批复）')}
+  else if(ev.type==='failover'){sysLine('⚠ 主模型异常，已自动切换备用模型，团队继续跑')}
+  else if(ev.type==='test'&&!ev.ok){sysLine('测试未通过：'+(ev.reason||''))}
+  else if(ev.type==='run_done'){sysLine('—— 本次运行结束 ——')}
+  if(ev.type==='agent'&&ev.agent)roleState(ev.agent,ev.st)
+}
+function welcome(){
+  if($('#welcome'))return;if(stream.querySelector('.bub'))return
+  const w=document.createElement('div');w.className='welcome';w.id='welcome'
+  const gl=document.createElement('div');gl.className='gl';gl.textContent='⬡'
+  const h=document.createElement('h2');h.textContent='六个角色在待命'
+  const p=document.createElement('p');p.textContent='点左侧成员选对话对象，或在下面直接说话（默认发给项目经理）。流水线的进展也会实时出现在这里。'
+  const row=document.createElement('div');row.className='row2'
+  for(const s of ['@测试工程 测过了吗？','@项目经理 现在谁在干活？','@编码开发 进度怎么样？']){
+    const b=document.createElement('button');b.textContent=s
+    b.onclick=()=>{const mm=s.match(/^@(\S+)\s+([\s\S]+)$/);const id=mm&&(ALIAS[mm[1]]||ALIAS[mm[1].toLowerCase()]);if(id)setTarget(id);cinput.value=s;cinput.focus()}
+    row.appendChild(b)
+  }
+  w.appendChild(gl);w.appendChild(h);w.appendChild(p);w.appendChild(row)
+  stream.appendChild(w)
+}
+// 事件去重集合（runId#seq#ts）：bus 的 seq 每轮重置，不能按大小比较，否则运行后的聊天事件会被丢弃
+const __seen=new Set();const __k=(e)=>(e&&e.runId?e.runId:'')+'#'+(e&&e.seq)+'#'+(e&&e.ts);
+async function boot(){
+  document.body.classList.add('rebooting')
+  buildAgents();setTarget('pm')
+  try{
+    const st=await(await fetch('/api/state')).json()
+    if(st.history&&st.history.length){
+      for(const ev of st.history)__seen.add(__k(ev))
+      for(const ev of st.history)applyEv(ev)
+      appliedRun=(st.history.find(e=>e.runId)||{}).runId||(st.current&&st.current.id)||null
+      lastApplied=st.history.reduce((m,e)=>Math.max(m,e.seq||0),0)
+      if(st.running)sysLine('流水线正在运行中…')
+      const last=[...st.history].reverse().find(e=>e.type==='agent')
+      if(last&&last.agent)roleState(last.agent,last.st)
+    }
+  }catch(e){sysLine('⚠ 读不到状态：'+String(e&&e.message||e))}
+  if(!stream.querySelector('.bub'))welcome()
+  requestAnimationFrame(()=>requestAnimationFrame(()=>document.body.classList.remove('rebooting')))
+  const es=new EventSource('/events')
+  es.onmessage=(e)=>{let ev=null;try{ev=JSON.parse(e.data)}catch{return}
+    if(typeof ev.seq==='number'){const k=__k(ev);if(__seen.has(k))return;__seen.add(k)}
+    applyEv(ev)
+    if(ev.runId&&ev.runId!==appliedRun){appliedRun=ev.runId;lastApplied=0}
+    if(typeof ev.seq==='number')lastApplied=Math.max(lastApplied,ev.seq)
+  }
+}
+boot()
+</script>
+<script>
+// 保险开关：2.5 秒后强制清掉入场动画（标签页被冻结时动画可能永远跑不完）
+setTimeout(() => { try { document.body.classList.add('pt-shot') } catch {} }, 2500)
+// v9 点击涟漪：按钮/角色卡/建议项都有一圈扩散反馈
+document.addEventListener('pointerdown', (e) => {
+  const el = e.target && e.target.closest ? e.target.closest('button,.agentbtn,.backlink,.themebtn,.suggests button') : null
+  if (!el) return
+  const r = el.getBoundingClientRect(); if (!r.width || !r.height) return
+  const d = Math.max(r.width, r.height) * 1.15
+  const s = document.createElement('span'); s.className = 'rp'
+  s.style.width = s.style.height = d + 'px'
+  s.style.left = (e.clientX - r.left - d / 2) + 'px'
+  s.style.top = (e.clientY - r.top - d / 2) + 'px'
+  el.appendChild(s)
+  setTimeout(() => { if (s.parentNode) s.remove() }, 700)
+})
+// 光标跟随光晕
+{
+  let raf = 0
+  addEventListener('pointermove', (e) => {
+    if (raf) return
+    raf = requestAnimationFrame(() => { raf = 0; const st = document.documentElement.style; st.setProperty('--mx', e.clientX + 'px'); st.setProperty('--my', e.clientY + 'px') })
+  }, { passive: true })
+}
+</script>
+</body>
+</html>

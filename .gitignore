@@ -1,0 +1,35 @@
+# ============================================================
+#  Pulse — 只上传核心多 Agent 系统
+#  一次性脚本 / 测试产物 / 备份 / 老版本 全部保留在本地，不入库
+# ============================================================
+
+# 根目录：默认全部忽略，只放行核心
+/*
+!/.gitignore
+!/README.md
+!/LICENSE
+!/app/
+
+# ── app 内部：只留核心（engine / web / server）──
+/app/node_modules/
+/app/*.log
+/app/config.json
+/app/runs/
+/app/tools/
+/app/web-v1-*/
+/app/doc/cert-tamper-*/
+/app/doc/uikit-demo/
+/app/doc/*.json
+
+# 依赖与构建产物
+node_modules/
+dist/
+build/
+.cache/
+.vercel/
+.turbo/
+
+# 系统文件
+Thumbs.db
+.DS_Store
+*.log
